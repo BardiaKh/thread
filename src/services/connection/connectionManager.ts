@@ -110,11 +110,12 @@ class ConnectionManager {
 		// Extract the token from the query parameters
 		const urlParams = new URLSearchParams(window.location.search);
 		const token = urlParams.get("token") ?? "123";
+		const baseURL = (window.location.origin + window.location.pathname).replace(/\/(vizly-notebook)?\/?\/?$/, '');
 
 		// Determine the server URL based on the environment
 		const serverUrl =
 			process.env.NODE_ENV === "production"
-				? window.location.origin // Use the base URL of the page
+				? baseURL // Use the base URL of the page
 				: "http://127.0.0.1:8888";
 		this.setServerUrl(serverUrl);
 		const serverSettings = this.createServerSettings(serverUrl, token);
@@ -137,7 +138,7 @@ class ConnectionManager {
 		try {
 			// Generate a unique ID for the user
 			const response = await fetch(
-				`${serverUrl}/vizly-notebook/uniqueId?token=${token}`,
+				`${serverUrl}/uniqueId?token=${token}`,
 				{
 					method: "GET",
 				},
