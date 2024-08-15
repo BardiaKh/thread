@@ -5,7 +5,7 @@ from jupyter_server.utils import url_path_join
 import tornado
 from tornado.web import StaticFileHandler, HTTPError, RedirectHandler, RequestHandler
 from tornado.httpclient import AsyncHTTPClient, HTTPRequest, HTTPResponse
-from traitlets import Unicode, default
+from traitlets import Unicode, Bool, default
 import uuid
 import json
 import logging
@@ -57,23 +57,23 @@ class UniqueIdHandler(tornado.web.RequestHandler):
 
 class VizlyNotebookApp(ExtensionApp):
     version = app_version
-    extension_url = "/vizly-notebook"
     name = "vizly-notebook"
     app_name = "VizlyNotebook"
     app_version = app_version
     load_other_extensions = False
 
-    default_url = Unicode("/vizly-notebook", config=True,
+    extension_url = Unicode("/", config=True,
+                            help="The base URL for the extension")
+    default_url = Unicode("/", config=True,
                           help="The default URL redirecting to `/`")
-    app_dir = Unicode(None, config=True,
+    app_dir = Unicode(BASE_DIR, config=True,
                       help="The app directory to launch the app from.")
-    static_dir = Unicode(
-        None, config=True, help="Directory with static files for this extension.")
-    static_url_prefix = Unicode(
-        "/static/vizly-notebook/", config=True, help="URL prefix for static files.")
-    templates_dir = Unicode(
-        None, config=True, help="Templates directory for the extension.")
-
+    static_dir = Unicode(HERE, config=True,
+                         help="Directory with static files for this extension.")
+    static_url_prefix = Unicode("/static/", config=True,
+                                help="URL prefix for static files.")
+    templates_dir = Unicode(HERE, config=True,
+                            help="Templates directory for the extension.")
     @default("app_dir")
     def _default_app_dir(self):
         return BASE_DIR
@@ -93,18 +93,18 @@ class VizlyNotebookApp(ExtensionApp):
 
     def initialize_handlers(self):
         self.log.info("Initializing VizlyNotebookApp handlers")
-        self.log.info(
-            f"self.display_url: {str(self.serverapp.display_url)}")
+        self.log.info(f"self.display_url: {str(self.serverapp.display_url)}")        
+        self.log.info(f"Extension URL: {self.extension_url}")
 
         static_path = self.static_dir
         self.log.info(f"Static path: {static_path}")
 
         handlers = [
-            (url_path_join(self.serverapp.base_url,
-             "/vizly-notebook/uniqueId"), UniqueIdHandler, {"display_url": self.serverapp.display_url}),
-            (url_path_join(self.serverapp.base_url, "/favicon.ico"), RedirectHandler,
-             {"url": self.serverapp.base_url + "vizly-notebook/favicon.ico"}),
-            (url_path_join(self.serverapp.base_url, "/vizly-notebook/?(.*)"),
+            (url_path_join(self.serverapp.base_url, f"{self.extension_url}uniqueId"),
+             UniqueIdHandler, {"display_url": self.serverapp.display_url}),
+            (url_path_join(self.serverapp.base_url, "favicon.ico"),
+             RedirectHandler, {"url": url_path_join(self.serverapp.base_url, f"{self.extension_url}/avicon.ico")}),
+            (url_path_join(self.serverapp.base_url, f"{self.extension_url}?(.*)"),
              StaticIndexHandler, {"path": static_path}),
         ]
         self.handlers.extend(handlers)
@@ -113,7 +113,6 @@ class VizlyNotebookApp(ExtensionApp):
         super().initialize_settings()
         app_log.info(f"settings: {str(self.settings)}")
         self.settings["contents_manager"].allow_hidden = True
-
 
 # Entry point to launch the extension app
 main = VizlyNotebookApp.launch_instance
