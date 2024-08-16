@@ -123,26 +123,26 @@ const Launcher = () => {
 							(key) => kernelSpecs.kernelspecs[key]?.display_name,
 						)
 						.map((key) => {
-							return {
-								label: kernelSpecs.kernelspecs[key]!
-									.display_name,
-								icon: kernelSpecs.kernelspecs[key]
-									?.resources ? (
+							const kernelSpec = kernelSpecs.kernelspecs[key]!;
+							const iconPath = kernelSpec.resources?.["logo-svg"];
+							
+							let icon;
+							if (iconPath && !iconPath.endsWith("python3/logo-svg.svg")) {
+								icon = (
 									<img
-										src={
-											kernelSpecs.kernelspecs[key]
-												?.resources["logo-svg"]
-										}
-										alt={
-											kernelSpecs.kernelspecs[key]!
-												.display_name
-										}
+										src={iconPath}
+										alt={kernelSpec.display_name}
 										height="36px"
 										width="36px"
 									/>
-								) : (
-									<PythonIcon boxSize={"36px"} />
-								),
+								);
+							} else {
+								icon = <PythonIcon boxSize={"36px"} />;
+							}
+	
+							return {
+								label: kernelSpec.display_name,
+								icon: icon,
 								actionHandler: () => {
 									createNewNotebook(key);
 								},
